@@ -1,0 +1,10 @@
+The standard protocol for scam investigations includes:
+
+1. Complaint intake and categorization
+2. Digital evidence acquisition
+3. Device and chat log analysis
+4. Financial transaction tracking
+5. Suspect identification and escalation
+
+Tools often used include Cellebrite, chain analysis platforms, and chatbot logs.
+Evidence handling must comply with forensic integrity standards.

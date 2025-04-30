@@ -1,0 +1,193 @@
+===========================================
+💡 FULL GUIDE: Build a Local RAG AI Bot on Kali Linux with LangChain, Ollama & LLaMA3
+===========================================
+
+This guide walks you through building a fully offline Retrieval-Augmented Generation (RAG) assistant using:
+- Kali Linux
+- Python virtual environments
+- LangChain (via community packages)
+- Ollama with LLaMA3
+- Your own `.txt` documents as a knowledge base
+
+🧩 You'll use: local embeddings (HuggingFace) + local LLM (Ollama)
+
+-------------------------------------------------
+📦 STEP 1: Install System Dependencies
+-------------------------------------------------
+Open terminal in Kali Linux and run:
+```bash
+sudo apt update
+sudo apt install -y python3 python3-pip python3-venv curl jq
+```
+
+-------------------------------------------------
+📁 STEP 2: Create Project Folder & Virtual Environment
+-------------------------------------------------
+```bash
+mkdir ~/Desktop/rag_investigation_bot
+cd ~/Desktop/rag_investigation_bot
+python3 -m venv venv
+source venv/bin/activate
+```
+
+-------------------------------------------------
+📚 STEP 3: Install Required Python Packages
+-------------------------------------------------
+```bash
+pip install --upgrade pip
+pip install langchain langchain-community langchain-ollama langchain-huggingface sentence-transformers faiss-cpu python-dotenv
+```
+
+-------------------------------------------------
+🤖 STEP 4: Install and Run Ollama with LLaMA3
+-------------------------------------------------
+### 1. Install Ollama:
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+### 2. Start the Ollama service:
+```bash
+ollama run llama3
+```
+This will download the model (~4GB) the first time. You can also run:
+```bash
+ollama serve &
+```
+
+-------------------------------------------------
+🗂️ STEP 5: Create Your Folder Structure
+-------------------------------------------------
+Inside `~/Desktop/rag_investigation_bot`, create:
+
+```bash
+mkdir docs
+touch .env
+```
+
+Place your knowledge `.txt` files inside the `docs` folder. For example:
+```bash
+docs/
+├── scam_detection_overview.txt
+├── investigation_protocols.txt
+├── htx_alignment.txt
+├── project_background.txt
+```
+
+-------------------------------------------------
+📜 STEP 6: Create main_huggingface.py Script
+-------------------------------------------------
+Save this as `main_huggingface.py` in your project folder:
+
+```python
+from langchain_community.document_loaders import DirectoryLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import FAISS
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_ollama import ChatOllama
+from langchain.chains import RetrievalQA
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
+
+# Step 1: Load and split documents
+loader = DirectoryLoader("docs", glob="*.txt")
+documents = loader.load()
+
+splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+chunks = splitter.split_documents(documents)
+
+# Step 2: Generate or load FAISS vectorstore with HuggingFace embeddings
+embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+index_path = "faiss_index"
+
+if not os.path.exists(index_path):
+    vectorstore = FAISS.from_documents(chunks, embeddings)
+    vectorstore.save_local(index_path)
+else:
+    vectorstore = FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
+
+# Step 3: Create QA chain with Ollama LLM
+retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
+llm = ChatOllama(model="llama3")
+qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
+
+# Step 4: Start interactive Q&A loop
+while True:
+    query = input("Ask a question (or type 'exit'): ")
+    if query.lower() == "exit":
+        break
+    result = qa_chain.invoke(query)
+    print("\nAnswer:", result)
+```
+
+-------------------------------------------------
+📝 STEP 7: Create Your First .txt File
+-------------------------------------------------
+Save this into `docs/scam_detection_overview.txt`:
+```
+Scam detection uses rule-based engines, anomaly detection, and NLP methods. Common scams include phishing, impersonation, and investment fraud. AI is used to flag suspicious patterns by analyzing chat logs, metadata, and financial indicators.
+```
+
+You can create more `.txt` files using:
+```bash
+nano docs/your_file.txt
+```
+
+-------------------------------------------------
+🔁 STEP 8: Run the Bot
+-------------------------------------------------
+Activate your environment:
+```bash
+source venv/bin/activate
+```
+
+Then:
+```bash
+python3 main_huggingface.py
+```
+
+You should now see:
+```
+Ask a question (or type 'exit'):
+```
+
+Try:
+```
+What is scam detection?
+```
+
+-------------------------------------------------
+📂 STEP 9: Add More Knowledge
+-------------------------------------------------
+Just drop more `.txt` files into the `docs/` folder.
+
+Examples:
+```bash
+docs/
+├── htx_alignment.txt
+├── project_background.txt
+├── rag_use_case_scam.txt
+├── digital_evidence_sop.txt
+```
+
+Then **delete the `faiss_index/` folder** to rebuild the index:
+```bash
+rm -rf faiss_index
+```
+
+And re-run your script:
+```bash
+python3 main_huggingface.py
+```
+
+This refreshes the embedded vector store with your new documents.
+
+-------------------------------------------------
+✅ You're Done!
+You now have a fully offline, local, and expandable RAG bot using:
+- Hugging Face embeddings
+- Ollama's LLaMA3 model
+- Your own `.txt` document base

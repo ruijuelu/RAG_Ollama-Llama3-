@@ -1,0 +1,7 @@
+Scam detection refers to identifying fraudulent activity using various methods such as:
+- Natural Language Processing (NLP)
+- Behavioral analytics
+- Pattern recognition
+
+Common scam types include phishing, impersonation, e-commerce fraud, and investment scams. 
+AI helps analyze transaction metadata, conversation logs, and user behavior to flag anomalies.
