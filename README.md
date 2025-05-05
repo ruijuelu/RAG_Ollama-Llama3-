@@ -17,7 +17,6 @@ rag-investigation-bot/
 ├── docs/                       # Text documents used as knowledge base
 │   ├── scam_detection_overview.txt
 │   ├── investigation_protocols.txt
-│   └── htx_alignment.txt
 ├── faiss_index/               # Auto-generated local vector index
 ├── main_huggingface.py        # Core RAG script
 ├── .env                       # Optional env vars (not used for Ollama setup)
@@ -72,7 +71,6 @@ python3 main_huggingface.py
 - "What is scam detection?"
 - "Explain how RAG is used in enforcement."
 - "What is the SOP for phishing scam investigations?"
-- "What are goals in AI project management?"
 
 ---
 
